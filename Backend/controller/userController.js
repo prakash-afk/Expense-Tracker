@@ -37,3 +37,26 @@ export const registerUser = async (req,res)=>{
 
     }
 }
+
+
+// To login an existing user
+export const loginUser = async (req,res)=> {
+    const {email,password}=req.body;
+    if(!email || !password){
+        return res.status(400).json({success:false,message:"Please provide email and password"});
+    }   
+    try{
+        const user=await userModel.findOne({email});
+        if(!user){
+            return res.status(400).json({success:false,message:"Invalid email or password"});
+        }
+        const isMatch=await bcrypt.compare(password,user.password);
+        if(!isMatch){
+            return res.status(400).json({success:false,message:"Invalid email or password"});
+        }
+        const token=createToken(user._id);
+        res.status(200).json({success:true,message:"User logged in successfully",token});
+    } catch (error) {
+        res.status(500).json({success:false,message:"Server error",error:error.message});
+    }
+}
