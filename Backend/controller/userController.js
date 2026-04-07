@@ -60,3 +60,45 @@ export const loginUser = async (req,res)=> {
         res.status(500).json({success:false,message:"Server error",error:error.message});
     }
 }
+
+
+//to get logined user details
+export const getUserDetails=async (req,res)=>{
+    try {
+        const user=await userModel.findById(req.user.id).select("name email");
+        if(!user){
+            return res.status(404).json({success:false,message:"User not found"});
+        }
+        res.status(200).json({success:true,user});
+    } catch (error) {
+        res.status(500).json({success:false,message:"Server error",error:error.message});
+    }
+}
+
+//to update user details
+export const updateUserDetails=async (req,res)=>{
+    const {name,email,password}=req.body;
+    try {
+        const user=await userModel.findById(req.user.id);
+        if(!user){
+            return res.status(404).json({success:false,message:"User not found"});
+        }
+        if(name) user.name=name;
+        if(email){
+            if(!validator.isEmail(email)){
+                return res.status(400).json({success:false,message:"Please provide a valid email"});
+            }
+            user.email=email;
+        }
+        if(password){
+            if(password.length<8){
+                return res.status(400).json({success:false,message:"Password must be at least 8 characters long"});
+            }
+            user.password=await bcrypt.hash(password,10);
+        }
+        await user.save();
+        res.status(200).json({success:true,message:"User details updated successfully",user});
+    } catch (error) {
+        res.status(500).json({success:false,message:"Server error",error:error.message});
+    }
+}
