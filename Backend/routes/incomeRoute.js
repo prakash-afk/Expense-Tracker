@@ -1,6 +1,6 @@
 import express from "express";
-import { addIncome, deleteIncome, getIncomes, updateIncome, downloadIncomeExcel} from "../controllers/incomeController.js";
-import {authMiddleware} from "../middleware/authMiddleware.js"; 
+import { addIncome, deleteIncome, getIncomes, updateIncome, downloadIncomeExcel,getIncomeOverview} from "../controller/incomeController.js";
+import {authMiddleware} from "../middleware/auth.js"; 
 
 const incomeRouter=express.Router();
 
@@ -18,6 +18,9 @@ incomeRouter.delete("/delete/:id",authMiddleware,deleteIncome);
 
 //Download the excel sheet of all incomes
 incomeRouter.get("/download",authMiddleware,downloadIncomeExcel);
+
+//income overview
+incomeRouter.get("/overview",authMiddleware,getIncomeOverview);
 
 export default incomeRouter;
 

@@ -26,7 +26,6 @@ const incomeSchema = new mongoose.Schema({
     type: String,
     default: "income",  
   },
-  timestamp: true
-});
+}, {timestamps: true});
 const incomeModel = mongoose.model("Income", incomeSchema) || mongoose.models.Income;   
 export default incomeModel;

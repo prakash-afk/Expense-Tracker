@@ -4,7 +4,7 @@ import getDateRange from "../utils/dataFilter.js";
 
 //add new income
 export async function addIncome(req,res){
-    const userId=req.user._id;
+    const userId=req.user.id;
     const {description,amount,category,date}=req.body;
     if(!description || !amount || !category || !date){
         return res.status(400).json({success:false,message:"Please provide all required fields"});
@@ -26,7 +26,7 @@ export async function addIncome(req,res){
 
 //to get all income of logined user
 export async function getIncomes(req,res){
-    const userId=req.user._id;
+    const userId=req.user.id;
     try{
         const incomes=await incomeModel.find({userId}).sort({date:-1});
         return res.status(200).json({success:true,message: "Incomes fetched successfully",incomes});
@@ -38,7 +38,7 @@ export async function getIncomes(req,res){
 
 //update income
 export async function updateIncome(req,res){
-    const userID=req.user._id;
+    const userID=req.user.id;
     const {id}=req.params;
     const {description,amount,category,date}=req.body;
     try{
@@ -60,7 +60,7 @@ export async function updateIncome(req,res){
 
 // to delete an income
 export async function deleteIncome(req,res){
-    const userID=req.user._id;
+    const userID=req.user.id;
     const {id}=req.params;
     try{
         const income=await incomeModel.findOne({_id:id,userId:userID});
@@ -77,7 +77,7 @@ export async function deleteIncome(req,res){
 
 // to download data in an excel sheet
 export async function downloadIncomeExcel(req,res){
-    const userID=req.user._id;
+    const userID=req.user.id;
     try{
         const incomes=await incomeModel.find({userId:userID}).sort({date:-1});
         const data=incomes.map(income=>({
@@ -99,7 +99,7 @@ export async function downloadIncomeExcel(req,res){
 
 //to get income overview 
 export async function getIncomeOverview(req,res){
-    const userID=req.user._id;
+    const userID=req.user.id;
     const {range}=req.query;    
     try{
         const {start,end}=getDateRange(range);
