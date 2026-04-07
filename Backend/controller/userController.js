@@ -97,7 +97,10 @@ export const updateUserDetails=async (req,res)=>{
             user.password=await bcrypt.hash(password,10);
         }
         await user.save();
-        res.status(200).json({success:true,message:"User details updated successfully",user});
+        res.status(200).json({success:true,message:"User details updated successfully",user: {
+        name: user.name,
+        email: user.email
+    }});
     } catch (error) {
         res.status(500).json({success:false,message:"Server error",error:error.message});
     }
