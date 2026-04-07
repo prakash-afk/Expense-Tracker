@@ -67,7 +67,7 @@ export async function deleteIncome(req,res){
         if(!income){
             return res.status(404).json({success:false,message:"Income not found"});
         }
-        await income.remove();
+        await income.deleteOne();
         return res.status(200).json({success:true,message:"Income deleted successfully"});
     }
     catch(error){   
@@ -86,12 +86,43 @@ export async function downloadIncomeExcel(req,res){
             category:income.category,
             date:income.date.toISOString().split("T")[0]
         }));
-        const worksheet=XLSX.utils.json_to_sheet(data);
-        const workbook=XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook,worksheet,"incomeModel");
-        XLSX.write(workbook,"income_details.xlsx");
-        res.download("income_details.xlsx")
+        const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+        res.setHeader("Content-Disposition", "attachment; filename=income_details.xlsx");
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-                      officedocument.spreadsheetml.sheet");
+
+        res.send(buffer);
     }catch(error){
         return res.status(500).json({success:false,message:"Error downloading incomes",error:error.message});
     }   
 }
+
+//to get income overview 
+export async function getIncomeOverview(req,res){
+    const userID=req.user._id;
+    const {range}=req.query;    
+    try{
+        const {start,end}=getDateRange(range);
+        const incomes=(await incomeModel.find({userId:userID,date:{$gte:start,$lte:end}})).sort({date:-1});
+        
+        
+
+        const totalIncome = incomes.reduce((acc, cur) => acc + cur.amount, 0);
+        const averageIncome = incomes.length > 0 ? totalIncome / incomes.length : 0;
+        const numberOfTransactions = incomes.length;
+        const recentTransactions = incomes.slice(0, 9);
+        res.status(200).json({
+            success:true,
+            message:"Income overview fetched successfully", 
+            overview: {
+                totalIncome,
+                averageIncome,  
+                numberOfTransactions,
+                recentTransactions
+            }
+        });
+    }catch(error){
+        return res.status(500).json({success:false,message:"Error fetching income overview",error:error.message});
+    }   
+}
+    
