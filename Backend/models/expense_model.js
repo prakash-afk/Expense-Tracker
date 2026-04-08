@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 
-const incomeSchema = new mongoose.Schema({
-    description : {
+const expenseSchema = new mongoose.Schema({
+    
+description : {
     type : String,
     required : true
   },
@@ -19,17 +20,17 @@ const incomeSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "user",
     required: true,
   },
   type: {
     type: String,
-    default: "income",  
+    default: "expense",  
   },
-}, {
-  timestamps: true,
-  collection: "income"
-});
 
-const incomeModel = mongoose.models.Income || mongoose.model("Income", incomeSchema);
-export default incomeModel;
+},{
+    timestamps:true,
+})
+
+const expenseModel=mongoose.models.expense || mongoose.model("expense",expenseSchema);
+export default expenseModel;
