@@ -4,7 +4,7 @@ import getDateRange from "../utils/dataFilter.js";
 
 // add new expense
 export async function addExpense(req, res) {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { description, amount, category, date } = req.body;
 
     if (!description || !amount || !category || !date) {
@@ -41,7 +41,7 @@ export async function addExpense(req, res) {
 
 // get all expenses of logged-in user
 export async function getExpense(req, res) {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     try {
         const expenses = await expenseModel.find({ userId }).sort({ date: -1 });
@@ -62,7 +62,7 @@ export async function getExpense(req, res) {
 
 // update expense
 export async function updateExpense(req, res) {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { id } = req.params;
     const { description, amount, category, date } = req.body;
 
@@ -99,7 +99,7 @@ export async function updateExpense(req, res) {
 
 // delete an expense
 export async function deleteExpense(req, res) {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { id } = req.params;
 
     try {
@@ -129,7 +129,7 @@ export async function deleteExpense(req, res) {
 
 // download expenses in Excel sheet format
 export async function downloadExpenseExcel(req, res) {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     try {
         const expenses = await expenseModel.find({ userId }).sort({ date: -1 });
@@ -172,7 +172,7 @@ export async function downloadExpenseExcel(req, res) {
 
 // get overview of expenses
 export async function getExpenseOverview(req, res) {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { range } = req.query;
 
     try {
