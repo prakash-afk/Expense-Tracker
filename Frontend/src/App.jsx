@@ -1,13 +1,41 @@
-import React from 'react'
+import React, { useState } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import Layout from "./components/layout";
+import Dashboard from "./pages/Dashboard";
 
 const App = () => {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold underline">
-          Hello world!
-      </h1>
-    </div>
-  )
-}
+  const [user, setUser] = useState(null);
+  const [, setToken] = useState(null);
+  const navigate = useNavigate();
 
-export default App
+  const clearAuth = () => {
+    try{
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+
+    } catch (error) {
+      console.error("Error clearing auth data:", error);
+    }
+    setUser(null);
+    setToken(null);
+  }
+
+  const handleLogout=()=>{
+    clearAuth();
+    navigate("/login");
+
+  }
+  return (
+    <>
+      <Routes>
+        <Route element={<Layout user={user} onLogout={handleLogout} />}>
+          <Route path="/" element={<Dashboard />} />
+        </Route>
+      </Routes>
+    </>
+  );
+};
+
+export default App;
