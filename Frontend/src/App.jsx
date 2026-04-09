@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import Layout from "./components/layout";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -32,6 +33,7 @@ const App = () => {
       <Routes>
         <Route element={<Layout user={user} onLogout={handleLogout} />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile user={user} />} />
         </Route>
       </Routes>
     </>
