@@ -49,6 +49,32 @@ export const formatCompactCurrency = (value) => {
   }).format(amount);
 };
 
+export const getAdaptiveValueTextClass = (
+  value,
+  {
+    defaultSize = "text-xl sm:text-2xl",
+    longSize = "text-lg sm:text-xl",
+    extraLongSize = "text-base sm:text-lg",
+    ultraLongSize = "text-sm sm:text-base",
+  } = {},
+) => {
+  const characterCount = String(value ?? "").replace(/\s+/g, "").length;
+
+  if (characterCount >= 18) {
+    return ultraLongSize;
+  }
+
+  if (characterCount >= 14) {
+    return extraLongSize;
+  }
+
+  if (characterCount >= 10) {
+    return longSize;
+  }
+
+  return defaultSize;
+};
+
 export const formatDisplayDate = (value) => {
   if (!value) {
     return "No date";
@@ -69,6 +95,24 @@ export const formatInputDate = (value) => {
   return new Date(value).toISOString().split("T")[0];
 };
 
+export const formatConsistentDateField = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
 export const getInitials = (name = "User") =>
   name
     .split(" ")
@@ -79,8 +123,8 @@ export const getInitials = (name = "User") =>
 
 export const sortByNewest = (items = []) =>
   [...items].sort((first, second) => {
-    const firstDate = new Date(first.createdAt || first.date).getTime();
-    const secondDate = new Date(second.createdAt || second.date).getTime();
+    const firstDate = new Date(first.date || first.createdAt).getTime();
+    const secondDate = new Date(second.date || second.createdAt).getTime();
 
     return secondDate - firstDate;
   });
@@ -127,32 +171,84 @@ export const createEmptyOverview = (kind) => ({
 
 export const clampPercent = (value) => Math.min(Math.max(Number(value || 0), 0), 100);
 
+export const getRangeBounds = (range = "monthly", referenceDate = new Date()) => {
+  const now = new Date(referenceDate);
+  let start;
+  let end;
+
+  switch (range) {
+    case "daily":
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      break;
+    case "weekly":
+      start = new Date(now);
+      start.setDate(now.getDate() - now.getDay());
+      start.setHours(0, 0, 0, 0);
+      end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+      break;
+    case "yearly":
+      start = new Date(now.getFullYear(), 0, 1);
+      end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+      break;
+    case "monthly":
+    default:
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      break;
+  }
+
+  return { start, end };
+};
+
+export const getSpendingWarning = (monthlyIncome, totalExpense) => {
+  const income = Number(monthlyIncome || 0);
+  const expense = Number(totalExpense || 0);
+
+  if (income <= 0) {
+    if (expense > 0) {
+      return {
+        level: "CRITICAL",
+        percentage: 100,
+      };
+    }
+
+    return {
+      level: "SAFE",
+      percentage: 0,
+    };
+  }
+
+  const percentage = (expense / income) * 100;
+
+  if (percentage >= 95) {
+    return { level: "CRITICAL", percentage };
+  }
+
+  if (percentage >= 85) {
+    return { level: "HIGH", percentage };
+  }
+
+  if (percentage >= 70) {
+    return { level: "MEDIUM", percentage };
+  }
+
+  return { level: "SAFE", percentage };
+};
+
 export const filterTransactionsByRange = (items = [], range = "monthly") => {
-  const now = new Date();
+  const { start, end } = getRangeBounds(range);
 
   return items.filter((item) => {
     const date = new Date(item.date);
 
-    if (range === "daily") {
-      return date.toDateString() === now.toDateString();
+    if (Number.isNaN(date.getTime())) {
+      return false;
     }
 
-    if (range === "weekly") {
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      return date >= startOfWeek && date <= now;
-    }
-
-    if (range === "yearly") {
-      return date.getFullYear() === now.getFullYear();
-    }
-
-    return (
-      date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear()
-    );
+    return date >= start && date <= end;
   });
 };
 

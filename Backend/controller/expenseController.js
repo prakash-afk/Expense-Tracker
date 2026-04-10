@@ -2,6 +2,22 @@ import expenseModel from "../models/expense_model.js";
 import XLSX from "xlsx";
 import getDateRange from "../utils/dataFilter.js";
 
+const getValidatedTransactionDate = (value) => {
+    const transactionDate = new Date(value);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    if (Number.isNaN(transactionDate.getTime())) {
+        return { error: "Please provide a valid date." };
+    }
+
+    if (transactionDate > endOfToday) {
+        return { error: "Future dates are not allowed." };
+    }
+
+    return { transactionDate };
+};
+
 // add new expense
 export async function addExpense(req, res) {
     const userId = req.user.id;
@@ -15,11 +31,19 @@ export async function addExpense(req, res) {
     }
 
     try {
+        const { transactionDate, error } = getValidatedTransactionDate(date);
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error
+            });
+        }
+
         const newExpense = new expenseModel({
             description,
             amount,
             category,
-            date: new Date(date),
+            date: transactionDate,
             userId
         });
 
@@ -42,9 +66,14 @@ export async function addExpense(req, res) {
 // get all expenses of logged-in user
 export async function getExpense(req, res) {
     const userId = req.user.id;
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
 
     try {
-        const expenses = await expenseModel.find({ userId }).sort({ date: -1 });
+        const expenses = await expenseModel.find({
+            userId,
+            date: { $lte: endOfToday }
+        }).sort({ date: -1 });
 
         return res.status(200).json({
             success: true,
@@ -79,7 +108,17 @@ export async function updateExpense(req, res) {
         if (description) expense.description = description;
         if (amount) expense.amount = amount;
         if (category) expense.category = category;
-        if (date) expense.date = new Date(date);
+        if (date) {
+            const { transactionDate, error } = getValidatedTransactionDate(date);
+            if (error) {
+                return res.status(400).json({
+                    success: false,
+                    message: error
+                });
+            }
+
+            expense.date = transactionDate;
+        }
 
         await expense.save();
 
@@ -130,9 +169,14 @@ export async function deleteExpense(req, res) {
 // download expenses in Excel sheet format
 export async function downloadExpenseExcel(req, res) {
     const userId = req.user.id;
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
 
     try {
-        const expenses = await expenseModel.find({ userId }).sort({ date: -1 });
+        const expenses = await expenseModel.find({
+            userId,
+            date: { $lte: endOfToday }
+        }).sort({ date: -1 });
 
         const data = expenses.map((expense) => ({
             description: expense.description,

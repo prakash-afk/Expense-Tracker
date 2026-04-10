@@ -2,6 +2,22 @@ import incomeModel from "../models/income_model.js";
 import XLSX from "xlsx";
 import getDateRange from "../utils/dataFilter.js";
 
+const getValidatedTransactionDate = (value) => {
+    const transactionDate = new Date(value);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    if (Number.isNaN(transactionDate.getTime())) {
+        return { error: "Please provide a valid date." };
+    }
+
+    if (transactionDate > endOfToday) {
+        return { error: "Future dates are not allowed." };
+    }
+
+    return { transactionDate };
+};
+
 //add new income
 export async function addIncome(req,res){
     const userId=req.user.id;
@@ -10,11 +26,16 @@ export async function addIncome(req,res){
         return res.status(400).json({success:false,message:"Please provide all required fields"});
     }
     try{
+        const { transactionDate, error } = getValidatedTransactionDate(date);
+        if (error) {
+            return res.status(400).json({ success:false, message:error });
+        }
+
         const newIncome=new incomeModel({
             description,
             amount,
             category,
-            date:new Date(date),
+            date:transactionDate,
             userId
         });
         await newIncome.save();
@@ -27,8 +48,13 @@ export async function addIncome(req,res){
 //to get all income of logined user
 export async function getIncomes(req,res){
     const userId=req.user.id;
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
     try{
-        const incomes=await incomeModel.find({userId}).sort({date:-1});
+        const incomes=await incomeModel.find({
+            userId,
+            date: { $lte: endOfToday }
+        }).sort({date:-1});
         return res.status(200).json({success:true,message: "Incomes fetched successfully",incomes});
     }catch(error){
         return res.status(500).json({success:false,message:"Error fetching incomes",error:error.message});
@@ -49,7 +75,14 @@ export async function updateIncome(req,res){
         income.description=description;
         income.amount=amount;
         income.category=category;
-        income.date=new Date(date);
+        if (date) {
+            const { transactionDate, error } = getValidatedTransactionDate(date);
+            if (error) {
+                return res.status(400).json({ success:false, message:error });
+            }
+
+            income.date=transactionDate;
+        }
         await income.save();
         return res.status(200).json({success:true,message:"Income updated successfully",income});
     }catch(error){
@@ -78,18 +111,26 @@ export async function deleteIncome(req,res){
 // to download data in an excel sheet
 export async function downloadIncomeExcel(req,res){
     const userID=req.user.id;
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
     try{
-        const incomes=await incomeModel.find({userId:userID}).sort({date:-1});
+        const incomes=await incomeModel.find({
+            userId:userID,
+            date: { $lte: endOfToday }
+        }).sort({date:-1});
         const data=incomes.map(income=>({
             description:income.description,
             amount:income.amount,
             category:income.category,
             date:income.date.toISOString().split("T")[0]
         }));
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Income");
         const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
         res.setHeader("Content-Disposition", "attachment; filename=income_details.xlsx");
-        res.setHeader("Content-Type", "application/vnd.openxmlformats-                      officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         res.send(buffer);
     }catch(error){
@@ -103,9 +144,7 @@ export async function getIncomeOverview(req,res){
     const {range}=req.query;    
     try{
         const {start,end}=getDateRange(range);
-        const incomes=(await incomeModel.find({userId:userID,date:{$gte:start,$lte:end}})).sort({date:-1});
-        
-        
+        const incomes=await incomeModel.find({userId:userID,date:{$gte:start,$lte:end}}).sort({date:-1});
 
         const totalIncome = incomes.reduce((acc, cur) => acc + cur.amount, 0);
         const averageIncome = incomes.length > 0 ? totalIncome / incomes.length : 0;
