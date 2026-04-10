@@ -36,7 +36,15 @@ const themes = {
   },
 };
 
-const TransactionModal = ({ isOpen, type, isWorking, onClose, onSubmit }) => {
+const TransactionModal = ({
+  isOpen,
+  type,
+  isWorking,
+  onClose,
+  onSubmit,
+  allowTypeSwitch = false,
+  onTypeChange,
+}) => {
   const [message, setMessage] = useState("");
   const [formValues, setFormValues] = useState({
     description: "",
@@ -45,8 +53,9 @@ const TransactionModal = ({ isOpen, type, isWorking, onClose, onSubmit }) => {
     date: formatInputDate(new Date()),
   });
 
-  const categories = type === "income" ? incomeCategories : expenseCategories;
-  const theme = themes[type];
+  const activeType = type;
+  const categories = activeType === "income" ? incomeCategories : expenseCategories;
+  const theme = themes[activeType];
 
   useEffect(() => {
     if (isOpen) {
@@ -54,11 +63,22 @@ const TransactionModal = ({ isOpen, type, isWorking, onClose, onSubmit }) => {
       setFormValues({
         description: "",
         amount: "",
-        category: type === "income" ? "Salary" : "Food",
+        category: activeType === "income" ? "Salary" : "Food",
         date: formatInputDate(new Date()),
       });
     }
-  }, [isOpen, type]);
+  }, [isOpen, activeType]);
+
+  useEffect(() => {
+    setFormValues((current) => ({
+      ...current,
+      category: categories.includes(current.category)
+        ? current.category
+        : activeType === "income"
+          ? "Salary"
+          : "Food",
+    }));
+  }, [activeType]);
 
   const updateField = (field, value) => {
     setFormValues((current) => ({
@@ -100,7 +120,7 @@ const TransactionModal = ({ isOpen, type, isWorking, onClose, onSubmit }) => {
             exit="exit"
             className="w-full max-w-2xl overflow-hidden rounded-[30px] bg-white shadow-[0_40px_80px_rgba(15,23,42,0.24)]"
           >
-            <div className={`bg-gradient-to-r ${theme.accent} p-6 text-white`}>
+              <div className={`bg-gradient-to-r ${theme.accent} p-6 text-white`}>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-3xl font-bold">{theme.action}</h2>
@@ -120,13 +140,41 @@ const TransactionModal = ({ isOpen, type, isWorking, onClose, onSubmit }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="grid gap-5 p-6">
+              {allowTypeSwitch ? (
+                <div className="grid gap-2">
+                  <span className="text-sm font-semibold text-slate-700">Type</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    {["income", "expense"].map((itemType) => {
+                      const isActive = activeType === itemType;
+
+                      return (
+                        <button
+                          key={itemType}
+                          type="button"
+                          onClick={() => onTypeChange?.(itemType)}
+                          className={`rounded-2xl px-4 py-3 text-base font-semibold transition ${
+                            isActive
+                              ? itemType === "income"
+                                ? "bg-teal-500 text-white"
+                                : "bg-orange-500 text-white"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {itemType === "income" ? "Income" : "Expense"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-slate-700">Description</span>
                 <input
                   type="text"
                   value={formValues.description}
                   onChange={(event) => updateField("description", event.target.value)}
-                  placeholder={type === "income" ? "Salary, freelance payment..." : "Groceries, rent, bills..."}
+                  placeholder={activeType === "income" ? "Salary, freelance payment..." : "Groceries, rent, bills..."}
                   className="h-14 rounded-2xl border border-slate-200 px-4 outline-none transition focus:border-teal-400"
                   required
                 />

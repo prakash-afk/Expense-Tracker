@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   PiggyBank,
+  Plus,
   ReceiptIndianRupee,
   TrendingDown,
   TrendingUp,
@@ -13,6 +14,7 @@ import GaugeCard from "../components/finance/GaugeCard";
 import RangeTabs from "../components/finance/RangeTabs";
 import StatCard from "../components/finance/StatCard";
 import TransactionFeed from "../components/finance/TransactionFeed";
+import TransactionModal from "../components/finance/TransactionModal";
 import {
   clampPercent,
   filterTransactionsByRange,
@@ -48,6 +50,8 @@ const buildExpenseDistribution = (items) => {
 const Dashboard = ({ financeApp }) => {
   const navigate = useNavigate();
   const [activeRange, setActiveRange] = useState("monthly");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [transactionType, setTransactionType] = useState("income");
 
   const transactions = filterTransactionsByRange(financeApp.allTransactions, activeRange);
   const incomeTransactions = transactions.filter((item) => item.type === "income");
@@ -121,10 +125,11 @@ const Dashboard = ({ financeApp }) => {
 
               <button
                 type="button"
-                onClick={() => navigate("/income")}
+                onClick={() => setIsModalOpen(true)}
                 className="inline-flex items-center gap-2 rounded-2xl bg-teal-500 px-5 py-3.5 text-base font-semibold text-white shadow-[0_16px_34px_rgba(20,184,166,0.24)] transition hover:-translate-y-0.5"
               >
-                + Add Transaction
+                <Plus size={20} />
+                Add Transaction
               </button>
             </div>
 
@@ -281,6 +286,20 @@ const Dashboard = ({ financeApp }) => {
           </article>
         </div>
       </section>
+
+      <TransactionModal
+        isOpen={isModalOpen}
+        type={transactionType}
+        allowTypeSwitch
+        onTypeChange={setTransactionType}
+        isWorking={financeApp.isWorking}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={(values) =>
+          transactionType === "income"
+            ? financeApp.addIncome(values)
+            : financeApp.addExpense(values)
+        }
+      />
     </div>
   );
 };

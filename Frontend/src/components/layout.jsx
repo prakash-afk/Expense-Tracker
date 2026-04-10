@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
+import FeedbackBurst from "./finance/FeedbackBurst";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 
@@ -50,6 +51,11 @@ const Layout = ({ financeApp }) => {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <FeedbackBurst
+        feedback={financeApp.feedback}
+        onClose={financeApp.hideFeedback}
+      />
     </div>
   );
 };
