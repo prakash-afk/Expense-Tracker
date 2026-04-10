@@ -1,24 +1,46 @@
-import { formatCompactCurrency } from "../../utils/financeUtils";
+import { useId } from "react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { formatCompactCurrency, formatCurrency } from "../../utils/financeUtils";
 
-const TrendChart = ({ title, subtitle, points, accent = "#14b8a6", emptyLabel = "No records yet" }) => {
-  const width = 900;
-  const height = 300;
-  const padding = 36;
-  const values = points.map((point) => point.value);
-  const maxValue = Math.max(...values, 0);
-  const safeMaxValue = maxValue > 0 ? maxValue : 1;
+const normalizeChartData = (points = []) =>
+  points.map((point, index) => ({
+    day: point.day ?? Number(point.label ?? index + 1),
+    amount: Number(point.amount ?? point.value ?? 0),
+  }));
 
-  const chartPoints = points.map((point, index) => {
-    const x =
-      padding +
-      (index * (width - padding * 2)) / Math.max(points.length - 1, 1);
-    const y =
-      height - padding - (point.value / safeMaxValue) * (height - padding * 2);
+const TooltipCard = ({ active, payload, label }) => {
+  if (!active || !payload?.length) {
+    return null;
+  }
 
-    return { ...point, x, y };
-  });
+  const amount = payload[0]?.value ?? 0;
 
-  const polyline = chartPoints.map((point) => `${point.x},${point.y}`).join(" ");
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-[0_18px_38px_rgba(15,23,42,0.12)]">
+      <p className="text-sm font-semibold text-slate-900">Day {label}</p>
+      <p className="mt-1 text-base font-bold text-emerald-600">{formatCurrency(amount)}</p>
+    </div>
+  );
+};
+
+const TrendChart = ({
+  title,
+  subtitle,
+  points,
+  accent = "#10b981",
+  emptyLabel = "No records yet",
+}) => {
+  const gradientId = useId();
+  const chartData = normalizeChartData(points);
+  const maxValue = Math.max(...chartData.map((point) => point.amount), 0);
 
   return (
     <article className="rounded-[30px] border border-slate-200/70 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
@@ -34,52 +56,64 @@ const TrendChart = ({ title, subtitle, points, accent = "#14b8a6", emptyLabel = 
           {emptyLabel}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[24px] border border-slate-100 bg-white p-4">
-          <svg viewBox={`0 0 ${width} ${height}`} className="h-[320px] w-full">
-            {[0, 0.25, 0.5, 0.75, 1].map((step) => {
-              const y = height - padding - step * (height - padding * 2);
+        <div className="h-[320px] overflow-hidden rounded-[24px] border border-slate-100 bg-white p-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 12, left: 4, bottom: 4 }}
+            >
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={accent} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={accent} stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
 
-              return (
-                <g key={step}>
-                  <line
-                    x1={padding}
-                    x2={width - padding}
-                    y1={y}
-                    y2={y}
-                    stroke="#e2e8f0"
-                    strokeDasharray="4 8"
-                  />
-                  <text x="0" y={y + 5} fill="#64748b" fontSize="13">
-                    {formatCompactCurrency(step * safeMaxValue)}
-                  </text>
-                </g>
-              );
-            })}
+              <CartesianGrid
+                stroke="#e2e8f0"
+                strokeDasharray="3 6"
+                vertical={false}
+                opacity={0.75}
+              />
 
-            <polyline
-              fill="none"
-              stroke={accent}
-              strokeWidth="4"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              points={polyline}
-            />
+              <XAxis
+                dataKey="day"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "#64748b", fontSize: 12 }}
+              />
 
-            {chartPoints.map((point) => (
-              <g key={point.label}>
-                <circle cx={point.x} cy={point.y} r="6" fill={accent} />
-                <text
-                  x={point.x}
-                  y={height - 6}
-                  textAnchor="middle"
-                  fill="#64748b"
-                  fontSize="12"
-                >
-                  {point.label}
-                </text>
-              </g>
-            ))}
-          </svg>
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                width={72}
+                tick={{ fill: "#64748b", fontSize: 12 }}
+                tickFormatter={formatCompactCurrency}
+              />
+
+              <Tooltip
+                content={<TooltipCard />}
+                cursor={{ stroke: accent, strokeDasharray: "4 4", opacity: 0.45 }}
+              />
+
+              <Area
+                type="monotone"
+                dataKey="amount"
+                stroke={accent}
+                fill={`url(#${gradientId})`}
+                strokeWidth={3}
+                animationDuration={1500}
+                animationEasing="ease-in-out"
+                dot={{ r: 3, fill: accent, stroke: "#ffffff", strokeWidth: 2 }}
+                activeDot={{
+                  r: 7,
+                  fill: accent,
+                  stroke: "#ffffff",
+                  strokeWidth: 3,
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       )}
     </article>
