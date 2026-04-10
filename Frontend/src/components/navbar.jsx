@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, Menu, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -21,13 +21,13 @@ const dropdownMotion = {
   },
 };
 
-const Navbar = ({ user, onLogout }) => {
+const Navbar = ({ user, onLogout, onMenuToggle }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
-  const displayName = user?.name || "Aarav Sharma";
-  const displayEmail = user?.email || "aarav.sharma@example.in";
+  const displayName = user?.name || "Demo User";
+  const displayEmail = user?.email || "aryan65@example.com";
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -42,6 +42,15 @@ const Navbar = ({ user, onLogout }) => {
 
   return (
     <header className="topbar">
+      <button
+        type="button"
+        className="mobile-menu-button"
+        onClick={onMenuToggle}
+        aria-label="Open navigation menu"
+      >
+        <Menu size={22} />
+      </button>
+
       <button type="button" className="brand" onClick={() => navigate("/")}>
         <img src={logo} alt="Expense Tracker" className="brand-logo" />
         <div className="brand-text">
@@ -62,7 +71,7 @@ const Navbar = ({ user, onLogout }) => {
 
           <div className="user-copy">
             <strong>{displayName}</strong>
-            <span>{displayEmail}</span>
+            <span className="user-email">{displayEmail}</span>
           </div>
 
           <ChevronDown

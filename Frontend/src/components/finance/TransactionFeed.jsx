@@ -46,7 +46,7 @@ const TransactionFeed = ({
       ) : (
         <div className="grid gap-4">
           {items.map((item) => {
-            const Icon = iconMap[item.type || type] || BadgeIndianRupee;
+            const Icon = iconMap[item.type || type] || ReceiptIndianRupee;
             const colors = colorMap[item.type || type] || colorMap.income;
 
             return (
@@ -64,7 +64,7 @@ const TransactionFeed = ({
                       {item.description}
                     </p>
                     <p className="truncate text-sm text-slate-500">
-                      {formatDisplayDate(item.date)} • {item.category}
+                      {`${formatDisplayDate(item.date)} | ${item.category}`}
                     </p>
                   </div>
                 </div>

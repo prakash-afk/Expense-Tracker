@@ -1,3 +1,4 @@
+import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, TrendingDown } from "lucide-react";
 import { useEffect } from "react";
@@ -11,12 +12,33 @@ const FeedbackBurst = ({ feedback, onClose }) => {
       return undefined;
     }
 
+    if (feedback.type === "income") {
+      const colors = ["#14b8a6", "#22c55e", "#06b6d4", "#facc15", "#ffffff"];
+      confetti({
+        particleCount: 90,
+        spread: 82,
+        startVelocity: 42,
+        origin: { x: 0.84, y: 0.22 },
+        zIndex: 120,
+        colors,
+      });
+
+      confetti({
+        particleCount: 42,
+        spread: 58,
+        startVelocity: 32,
+        origin: { x: 0.76, y: 0.18 },
+        zIndex: 120,
+        colors,
+      });
+    }
+
     const timer = setTimeout(() => {
       onClose();
     }, 2600);
 
     return () => clearTimeout(timer);
-  }, [feedback.open, onClose]);
+  }, [feedback.open, feedback.type, onClose]);
 
   return (
     <AnimatePresence>
@@ -27,7 +49,7 @@ const FeedbackBurst = ({ feedback, onClose }) => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -14, scale: 0.98 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="pointer-events-none fixed right-6 top-28 z-[70] w-full max-w-sm"
+          className="pointer-events-none fixed left-4 right-4 top-24 z-[70] w-auto sm:left-auto sm:right-6 sm:top-28 sm:w-full sm:max-w-sm"
         >
           <div
             className={`relative overflow-hidden rounded-[28px] border px-5 py-5 shadow-[0_30px_60px_rgba(15,23,42,0.18)] ${

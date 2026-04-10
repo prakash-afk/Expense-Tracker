@@ -66,6 +66,8 @@ const Dashboard = ({ financeApp }) => {
     {
       label: "Total Balance",
       value: formatCurrency(balance),
+      numericValue: balance,
+      formatAnimatedValue: formatCurrency,
       helper: `${formatCompactCurrency(balance)} for ${rangeLabels[activeRange]}`,
       icon: <Wallet size={22} />,
       tone: "teal",
@@ -116,7 +118,7 @@ const Dashboard = ({ financeApp }) => {
               <div>
                 <div className="flex items-center gap-3">
                   <TrendingUp className="text-teal-600" size={24} />
-                  <h1 className="text-3xl font-bold text-slate-900">Financial Overview</h1>
+                  <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Financial Overview</h1>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-500">
                     This {getMonthLabel()}
                   </span>
@@ -136,10 +138,10 @@ const Dashboard = ({ financeApp }) => {
             <div className="rounded-[28px] border border-teal-100 bg-gradient-to-br from-cyan-50 to-emerald-50 p-6 shadow-[0_24px_40px_rgba(20,184,166,0.12)]">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-[2.4rem] font-bold tracking-tight text-teal-700">
+                  <h2 className="text-3xl font-bold tracking-tight text-teal-700 sm:text-[2.4rem]">
                     Finance Dashboard
                   </h2>
-                  <p className="mt-2 max-w-xl text-lg text-slate-600">
+                  <p className="mt-2 max-w-xl text-base text-slate-600 sm:text-lg">
                     Track your income and expenses with smooth, readable summaries.
                   </p>
                 </div>
@@ -152,6 +154,8 @@ const Dashboard = ({ financeApp }) => {
               <StatCard
                 label="Total Balance"
                 value={formatCurrency(balance)}
+                numericValue={balance}
+                formatAnimatedValue={formatCurrency}
                 helper="Net amount after income and expense"
                 icon={<Wallet size={20} />}
                 tone="teal"
@@ -168,6 +172,8 @@ const Dashboard = ({ financeApp }) => {
               <StatCard
                 label="This Month Savings"
                 value={formatCurrency(balance)}
+                numericValue={balance}
+                formatAnimatedValue={formatCurrency}
                 helper={`${clampPercent(savingsRate)}% of income`}
                 icon={<PiggyBank size={20} />}
                 tone="sky"

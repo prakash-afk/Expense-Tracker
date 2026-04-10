@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FeedbackBurst from "./finance/FeedbackBurst";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
@@ -22,12 +22,18 @@ const pageMotion = {
 const Layout = ({ financeApp }) => {
   const location = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <div className="app-shell">
       <Navbar
         user={financeApp.user}
         onLogout={financeApp.logout}
+        onMenuToggle={() => setIsMobileMenuOpen((current) => !current)}
       />
 
       <Sidebar
@@ -35,6 +41,8 @@ const Layout = ({ financeApp }) => {
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed((current) => !current)}
         onLogout={financeApp.logout}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
 
       <main className={`app-main ${isSidebarCollapsed ? "app-main-collapsed" : ""}`}>

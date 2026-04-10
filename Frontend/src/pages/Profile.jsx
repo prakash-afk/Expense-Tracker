@@ -13,14 +13,14 @@ const Profile = ({ financeApp }) => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "success" });
   const [formValues, setFormValues] = useState({
-    name: financeApp.user?.name || "Aarav Sharma",
-    email: financeApp.user?.email || "aarav.sharma@example.in",
+    name: financeApp.user?.name || "Demo User",
+    email: financeApp.user?.email || "aryan65@example.com",
   });
 
   useEffect(() => {
     setFormValues({
-      name: financeApp.user?.name || "Aarav Sharma",
-      email: financeApp.user?.email || "aarav.sharma@example.in",
+      name: financeApp.user?.name || "Demo User",
+      email: financeApp.user?.email || "aryan65@example.com",
     });
   }, [financeApp.user]);
 
@@ -73,8 +73,8 @@ const Profile = ({ financeApp }) => {
               <div className="mx-auto grid h-28 w-28 place-items-center rounded-full border border-white/20 bg-white/12 text-3xl font-bold">
                 {getInitials(formValues.name)}
               </div>
-              <h1 className="mt-5 text-4xl font-bold">{formValues.name}</h1>
-              <p className="mt-2 text-lg text-white/85">{formValues.email}</p>
+              <h1 className="mt-5 text-3xl font-bold sm:text-4xl">{formValues.name}</h1>
+              <p className="mt-2 break-all text-base text-white/85 sm:text-lg">{formValues.email}</p>
             </div>
 
             <div className="grid gap-6 p-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -84,7 +84,7 @@ const Profile = ({ financeApp }) => {
               >
                 <div className="mb-6 flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="flex items-center gap-3 text-3xl font-bold text-slate-900">
+                    <h2 className="flex items-center gap-3 text-2xl font-bold text-slate-900 sm:text-3xl">
                       <UserRound className="text-teal-600" size={24} />
                       Personal Information
                     </h2>
@@ -144,7 +144,7 @@ const Profile = ({ financeApp }) => {
 
               <div className="grid gap-6">
                 <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
-                  <h2 className="flex items-center gap-3 text-3xl font-bold text-slate-900">
+                  <h2 className="flex items-center gap-3 text-2xl font-bold text-slate-900 sm:text-3xl">
                     <ShieldCheck className="text-teal-600" size={24} />
                     Account Security
                   </h2>

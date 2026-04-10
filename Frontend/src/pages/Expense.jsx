@@ -62,8 +62,8 @@ const Expense = ({ financeApp }) => {
           <article className="rounded-[30px] border border-slate-200/70 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="text-4xl font-bold text-slate-900">Expense Overview</h1>
-                <p className="mt-2 text-lg text-slate-500">
+                <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Expense Overview</h1>
+                <p className="mt-2 text-base text-slate-500 sm:text-lg">
                   Track and manage your spending without losing detail.
                 </p>
               </div>
