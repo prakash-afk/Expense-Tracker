@@ -3,7 +3,6 @@ import {
   ChevronRight,
   CircleHelp,
   House,
-  IndianRupee,
   LogOut,
   TrendingDown,
   TrendingUp,
