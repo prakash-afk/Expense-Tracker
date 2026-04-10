@@ -24,6 +24,17 @@ const defaultFeedback = {
   message: "",
 };
 
+const getSpendingRatio = (dashboardData) => {
+  const income = Number(dashboardData?.monthlyIncome || 0);
+  const expense = Number(dashboardData?.monthlyExpense || 0);
+
+  if (income <= 0) {
+    return 0;
+  }
+
+  return expense / income;
+};
+
 export const useFinanceApp = () => {
   const [token, setToken] = useState("");
   const [user, setUser] = useState(null);
@@ -66,16 +77,22 @@ export const useFinanceApp = () => {
 
   const loadDashboard = async (activeToken = token) => {
     if (!activeToken) {
-      return;
+      return defaultDashboard;
     }
 
     const response = await api.get("/dashboard/overview", withToken(activeToken));
-    setDashboard(response.data.data || defaultDashboard);
+    const nextDashboard = response.data.data || defaultDashboard;
+    setDashboard(nextDashboard);
+    return nextDashboard;
   };
 
   const loadIncomes = async (range = incomeState.range, activeToken = token) => {
     if (!activeToken) {
-      return;
+      return {
+        range,
+        list: [],
+        overview: createEmptyOverview("income"),
+      };
     }
 
     const [listResponse, overviewResponse] = await Promise.all([
@@ -86,7 +103,7 @@ export const useFinanceApp = () => {
     const list = listResponse.data.incomes || [];
     const overview = overviewResponse.data.overview || {};
 
-    setIncomeState({
+    const nextIncomeState = {
       range,
       list,
       overview: {
@@ -96,12 +113,19 @@ export const useFinanceApp = () => {
         recentTransactions: overview.recentTransactions || [],
         kind: "income",
       },
-    });
+    };
+
+    setIncomeState(nextIncomeState);
+    return nextIncomeState;
   };
 
   const loadExpenses = async (range = expenseState.range, activeToken = token) => {
     if (!activeToken) {
-      return;
+      return {
+        range,
+        list: [],
+        overview: createEmptyOverview("expense"),
+      };
     }
 
     const [listResponse, overviewResponse] = await Promise.all([
@@ -112,7 +136,7 @@ export const useFinanceApp = () => {
     const list = listResponse.data.expenses || [];
     const overview = overviewResponse.data.overview || {};
 
-    setExpenseState({
+    const nextExpenseState = {
       range,
       list,
       overview: {
@@ -122,15 +146,24 @@ export const useFinanceApp = () => {
         recentTransactions: overview.recentTransactions || [],
         kind: "expense",
       },
-    });
+    };
+
+    setExpenseState(nextExpenseState);
+    return nextExpenseState;
   };
 
   const refreshAllData = async (activeToken = token) => {
-    await Promise.all([
+    const [nextDashboard, nextIncomeState, nextExpenseState] = await Promise.all([
       loadDashboard(activeToken),
       loadIncomes(incomeState.range, activeToken),
       loadExpenses(expenseState.range, activeToken),
     ]);
+
+    return {
+      dashboard: nextDashboard,
+      incomeState: nextIncomeState,
+      expenseState: nextExpenseState,
+    };
   };
 
   const showFeedback = (type, title, message) => {
@@ -295,12 +328,22 @@ export const useFinanceApp = () => {
         withToken(token),
       );
 
-      await refreshAllData();
-      showFeedback(
-        "expense",
-        "Expense added",
-        "Not the happiest update, but your tracker is staying honest.",
-      );
+      const refreshedData = await refreshAllData();
+      const nextSpendingRatio = getSpendingRatio(refreshedData.dashboard);
+
+      if (nextSpendingRatio >= 0.7) {
+        showFeedback(
+          "warning",
+          "Spend carefully",
+          `You have already used ${Math.round(nextSpendingRatio * 100)}% of this month's income. Slow down a little and protect your savings.`,
+        );
+      } else {
+        showFeedback(
+          "expense",
+          "Expense added",
+          "Not the happiest update, but your tracker is staying honest.",
+        );
+      }
 
       return {
         success: true,
