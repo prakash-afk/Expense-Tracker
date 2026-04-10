@@ -1,14 +1,57 @@
-import React from 'react'
-import { Outlet } from "react-router-dom";
-import {styles} from "../assets/dummyStyles"
-import Navbar from "./navbar"
-const Layout = ({onLogout,user}) => {
-  return (
-    <div className={styles.layout.root}>
-      <Navbar user={user} onLogout={onLogout} />
-      <Outlet />
-    </div>
-  )
-}
+import { AnimatePresence, motion } from "framer-motion";
+import { Outlet, useLocation } from "react-router-dom";
+import { useState } from "react";
+import Navbar from "./navbar";
+import Sidebar from "./sidebar";
 
-export default Layout
+const pageMotion = {
+  initial: { opacity: 0, y: 16 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    transition: { duration: 0.18, ease: "easeOut" },
+  },
+};
+
+const Layout = ({ financeApp }) => {
+  const location = useLocation();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  return (
+    <div className="app-shell">
+      <Navbar
+        user={financeApp.user}
+        onLogout={financeApp.logout}
+      />
+
+      <Sidebar
+        user={financeApp.user}
+        isCollapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed((current) => !current)}
+        onLogout={financeApp.logout}
+      />
+
+      <main className={`app-main ${isSidebarCollapsed ? "app-main-collapsed" : ""}`}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            variants={pageMotion}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="page-frame"
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
+      </main>
+    </div>
+  );
+};
+
+export default Layout;

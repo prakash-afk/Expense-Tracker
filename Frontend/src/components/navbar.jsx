@@ -1,120 +1,123 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {navbarStyles} from "../assets/dummyStyles"
-import img1 from "../assets/logo.png"
+import logo from "../assets/logo.png";
+import { getInitials } from "../utils/financeUtils";
 
-const Navbar = ({ user }) => {
-    const navigate = useNavigate();
-    const [isOpen, setIsOpen] = useState(false);
-    const menuRef = useRef(null);
-    const displayName = user?.fullName || user?.name || "User";
-    const displayEmail = user?.email || "user@expensetracker.com";
-    const initial = displayName.charAt(0).toUpperCase();
+const dropdownMotion = {
+  hidden: { opacity: 0, y: -10, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    scale: 0.98,
+    transition: { duration: 0.16, ease: "easeOut" },
+  },
+};
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
+const Navbar = ({ user, onLogout }) => {
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
 
-        document.addEventListener("mousedown", handleClickOutside);
+  const displayName = user?.name || "Aarav Sharma";
+  const displayEmail = user?.email || "aarav.sharma@example.in";
 
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
 
   return (
-    <header className={navbarStyles.header}>
-        <div className={navbarStyles.container}>
-            <div onClick={() => navigate("/")} className="flex items-center gap-3 cursor-pointer">
-                <div className="h-12 w-12 overflow-hidden rounded-xl">
-                    <img src={img1} alt="Logo" className="h-full w-full object-cover" />
-                </div>
-                <span className="text-2xl font-semibold text-slate-900 md:text-3xl">
-                    Expense Tracker
-                </span>
-            </div>
-
-            <div ref={menuRef} className={navbarStyles.userContainer}>
-                <button
-                    type="button"
-                    onClick={() => setIsOpen((current) => !current)}
-                    className={navbarStyles.userButton}
-                >
-                    <div className="relative">
-                        <div className={navbarStyles.userAvatar}>{initial}</div>
-                        <span className={navbarStyles.statusIndicator}></span>
-                    </div>
-
-                    <div className={navbarStyles.userTextContainer}>
-                        <p className={navbarStyles.userName}>{displayName}</p>
-                        <p className={navbarStyles.userEmail}>{displayEmail}</p>
-                    </div>
-
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        className={navbarStyles.chevronIcon(isOpen)}
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path d="m6 15 6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                </button>
-
-                {isOpen && (
-                    <div className={navbarStyles.dropdownMenu}>
-                        <div className={`${navbarStyles.dropdownHeader} flex items-center gap-3`}>
-                            <div className={navbarStyles.dropdownAvatar}>{initial}</div>
-                            <div className="min-w-0">
-                                <p className={`${navbarStyles.dropdownName} font-medium`}>
-                                    {displayName}
-                                </p>
-                                <p className={`${navbarStyles.dropdownEmail} truncate`}>
-                                    {displayEmail}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className={navbarStyles.menuItemContainer}>
-                            <button
-                                type="button"
-                                className={navbarStyles.menuItem}
-                                onClick={() => {
-                                    setIsOpen(false);
-                                    navigate("/profile");
-                                }}
-                            >
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    className="h-4 w-4"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                >
-                                    <path
-                                        d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                    <path
-                                        d="M4 20a8 8 0 0 1 16 0"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                                <span>My Profile</span>
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
+    <header className="topbar">
+      <button type="button" className="brand" onClick={() => navigate("/")}>
+        <img src={logo} alt="Expense Tracker" className="brand-logo" />
+        <div className="brand-text">
+          <span className="brand-title">Expense Tracker</span>
         </div>
+      </button>
 
+      <div ref={menuRef} className="user-menu">
+        <button
+          type="button"
+          className="user-menu-trigger"
+          onClick={() => setIsOpen((current) => !current)}
+        >
+          <div className="avatar-badge">
+            {getInitials(displayName)}
+            <span className="status-dot" />
+          </div>
+
+          <div className="user-copy">
+            <strong>{displayName}</strong>
+            <span>{displayEmail}</span>
+          </div>
+
+          <ChevronDown
+            size={18}
+            className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        <AnimatePresence>
+          {isOpen ? (
+            <motion.div
+              variants={dropdownMotion}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="user-dropdown"
+            >
+              <div className="user-dropdown-header">
+                <div className="avatar-badge large">{getInitials(displayName)}</div>
+                <div className="user-copy">
+                  <strong>{displayName}</strong>
+                  <span>{displayEmail}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="dropdown-link"
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate("/profile");
+                }}
+              >
+                <UserRound size={18} />
+                <span>My Profile</span>
+              </button>
+
+              <button
+                type="button"
+                className="dropdown-link danger"
+                onClick={() => {
+                  setIsOpen(false);
+                  onLogout();
+                  navigate("/login");
+                }}
+              >
+                <LogOut size={18} />
+                <span>Logout</span>
+              </button>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
     </header>
-  )
-}
+  );
+};
 
 export default Navbar;

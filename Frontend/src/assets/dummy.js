@@ -1,5 +1,12 @@
- // src/data/dummyData.js
-import { v4 as uuidv4 } from 'uuid';
+// src/data/dummyData.js
+
+const createId = () => {
+  if (typeof globalThis !== "undefined" && globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `txn-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+};
 
 // Generate random dates within the last 30 days
 const randomDate = () => {
@@ -37,7 +44,7 @@ export const dummyTransactions = Array.from({ length: 100 }, () => {
   const category = categories[Math.floor(Math.random() * categories.length)];
   
   return {
-    id: uuidv4(),
+    id: createId(),
     type: isExpense ? 'expense' : 'income',
     amount,
     description: `${isExpense ? 'Payment for' : 'Income from'} ${category.toLowerCase()}`,
