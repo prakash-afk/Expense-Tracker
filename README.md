@@ -253,15 +253,6 @@ From `Backend/package.json`:
 
 - `npm start` - starts the Express server with nodemon
 
-### Frontend
-
-From `Frontend/package.json`:
-
-- `npm run dev` - starts the Vite development server
-- `npm run build` - creates a production build
-- `npm run preview` - previews the production build
-- `npm run lint` - runs ESLint
-
 ## Authentication Flow
 
 1. User signs up or logs in from the frontend
@@ -285,15 +276,7 @@ The app currently supports:
 - CSV export from the frontend transaction pages
 - Excel export from backend download endpoints
 
-## Support Form Configuration
 
-The in-app support modal uses EmailJS through the frontend.
-
-It submits the following template variables to the configured template:
-
-- `name`
-- `email`
-- `message`
 
 ## Deployment Notes
 
@@ -302,25 +285,6 @@ Typical deployment setup:
 - frontend on Vercel or Render
 - backend on Render, Railway, or any Node hosting provider
 - MongoDB on MongoDB Atlas
-
-For deployed environments, make sure:
-
-- backend `MONGODB_URI` is configured
-- backend `PORT` is provided by the host or defaults correctly
-- frontend `VITE_API_BASE_URL` points to the deployed backend API
-
-## Current Workflow Summary
-
-This repository is organized as a classic two-app setup:
-
-- the `Backend` folder handles database, authentication, and API endpoints
-- the `Frontend` folder handles UI, animations, forms, charts, and support flows
-
-That separation makes it easy to:
-
-- develop frontend and backend independently
-- deploy each side separately
-- swap API environments using frontend env configuration
 
 ## Future Improvements
 
