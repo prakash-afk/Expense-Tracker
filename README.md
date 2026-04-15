@@ -261,6 +261,14 @@ From `Backend/package.json`:
 4. Protected API requests include `Authorization: Bearer <token>`
 5. Protected routes are unlocked after authentication
 
+## Security and Data Isolation
+
+- Implemented strict user-based data isolation using JWT authentication
+- Ensured all income and expense records are tied to authenticated `userId` on the backend
+- Prevented client-side `userId` spoofing by ignoring frontend `userId` inputs
+- Scoped all CRUD operations to user context to eliminate cross-user data access
+- Enforced ownership checks on update and delete operations, returning `404` for unauthorized access
+
 ## Data Notes
 
 - transaction records are stored per authenticated user
