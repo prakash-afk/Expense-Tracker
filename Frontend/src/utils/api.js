@@ -7,6 +7,7 @@ export const AUTH_STORAGE_KEY = "expense-tracker-auth";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 import {
   ChevronRight,
   CircleHelp,
@@ -21,6 +21,36 @@ const menuItems = [
 
 const SIDEBAR_WIDTH = 232;
 const SIDEBAR_COLLAPSED_WIDTH = 82;
+const sidebarTransition = {
+  duration: 0.48,
+  ease: [0.16, 1, 0.3, 1],
+};
+const labelMotion = {
+  hidden: {
+    opacity: 0,
+    x: -8,
+    width: 0,
+  },
+  visible: {
+    opacity: 1,
+    x: 0,
+    width: "auto",
+    transition: {
+      duration: 0.24,
+      delay: 0.08,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -6,
+    width: 0,
+    transition: {
+      duration: 0.18,
+      ease: [0.4, 0, 1, 1],
+    },
+  },
+};
 
 const SidebarBody = ({
   displayName,
@@ -29,6 +59,7 @@ const SidebarBody = ({
   onToggle,
   onClose,
   onLogout,
+  onOpenSupport,
 }) => {
   const navigate = useNavigate();
 
@@ -37,12 +68,21 @@ const SidebarBody = ({
       <div className="sidebar-top-card">
         <div className="avatar-badge larger">{getInitials(displayName)}</div>
 
-        {!collapsed ? (
-          <div className="sidebar-user-copy">
-            <strong>{displayName}</strong>
-            <span>{displayEmail}</span>
-          </div>
-        ) : null}
+        <AnimatePresence initial={false}>
+          {!collapsed ? (
+            <Motion.div
+              key="user-copy"
+              variants={labelMotion}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="sidebar-user-copy"
+            >
+              <strong>{displayName}</strong>
+              <span>{displayEmail}</span>
+            </Motion.div>
+          ) : null}
+        </AnimatePresence>
 
         {collapsed ? null : onClose ? (
           <button type="button" className="sidebar-toggle" onClick={onClose}>
@@ -62,21 +102,38 @@ const SidebarBody = ({
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map(({ label, path, icon: Icon }) => (
-          <NavLink
-            key={path}
-            to={path}
-            onClick={onClose}
-            className={({ isActive }) =>
-              `sidebar-link ${isActive ? "sidebar-link-active" : ""} ${
-                collapsed ? "sidebar-link-collapsed" : ""
-              }`
-            }
-          >
-            <Icon size={20} />
-            {!collapsed ? <span>{label}</span> : null}
-          </NavLink>
-        ))}
+        {menuItems.map((item) => {
+          const CurrentIcon = item.icon;
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={onClose}
+              className={({ isActive }) =>
+                `sidebar-link ${isActive ? "sidebar-link-active" : ""} ${
+                  collapsed ? "sidebar-link-collapsed" : ""
+                }`
+              }
+            >
+              <CurrentIcon size={20} />
+              <AnimatePresence initial={false}>
+                {!collapsed ? (
+                  <Motion.span
+                    key={`${item.label}-label`}
+                    variants={labelMotion}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="overflow-hidden whitespace-nowrap"
+                  >
+                    {item.label}
+                  </Motion.span>
+                ) : null}
+              </AnimatePresence>
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">
@@ -84,12 +141,25 @@ const SidebarBody = ({
           type="button"
           className={`sidebar-link ${collapsed ? "sidebar-link-collapsed" : ""}`}
           onClick={() => {
-            navigate("/profile");
+            onOpenSupport();
             onClose?.();
           }}
         >
           <CircleHelp size={20} />
-          {!collapsed ? <span>Support</span> : null}
+          <AnimatePresence initial={false}>
+            {!collapsed ? (
+              <Motion.span
+                key="support-label"
+                variants={labelMotion}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="overflow-hidden whitespace-nowrap"
+              >
+                Support
+              </Motion.span>
+            ) : null}
+          </AnimatePresence>
         </button>
 
         <button
@@ -102,7 +172,20 @@ const SidebarBody = ({
           }}
         >
           <LogOut size={20} />
-          {!collapsed ? <span>Logout</span> : null}
+          <AnimatePresence initial={false}>
+            {!collapsed ? (
+              <Motion.span
+                key="logout-label"
+                variants={labelMotion}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="overflow-hidden whitespace-nowrap"
+              >
+                Logout
+              </Motion.span>
+            ) : null}
+          </AnimatePresence>
         </button>
       </div>
     </>
@@ -114,6 +197,7 @@ const Sidebar = ({
   isCollapsed,
   onToggle,
   onLogout,
+  onOpenSupport,
   isMobileMenuOpen,
   onCloseMobile,
 }) => {
@@ -122,9 +206,9 @@ const Sidebar = ({
 
   return (
     <>
-      <motion.aside
+      <Motion.aside
         animate={{ width: isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH }}
-        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+        transition={sidebarTransition}
         className="sidebar-shell desktop-sidebar"
       >
         <SidebarBody
@@ -133,13 +217,14 @@ const Sidebar = ({
           collapsed={isCollapsed}
           onToggle={onToggle}
           onLogout={onLogout}
+          onOpenSupport={onOpenSupport}
         />
-      </motion.aside>
+      </Motion.aside>
 
       <AnimatePresence>
         {isMobileMenuOpen ? (
           <>
-            <motion.button
+            <Motion.button
               type="button"
               className="mobile-sidebar-backdrop"
               onClick={onCloseMobile}
@@ -149,12 +234,12 @@ const Sidebar = ({
               aria-label="Close navigation"
             />
 
-            <motion.aside
+            <Motion.aside
               className="mobile-sidebar-shell"
               initial={{ x: -30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -30, opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
             >
               <SidebarBody
                 displayName={displayName}
@@ -163,8 +248,9 @@ const Sidebar = ({
                 onToggle={onToggle}
                 onClose={onCloseMobile}
                 onLogout={onLogout}
+                onOpenSupport={onOpenSupport}
               />
-            </motion.aside>
+            </Motion.aside>
           </>
         ) : null}
       </AnimatePresence>

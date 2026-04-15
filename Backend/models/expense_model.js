@@ -20,8 +20,10 @@ description : {
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
+    ref: "User",
     required: true,
+    immutable: true,
+    index: true,
   },
   type: {
     type: String,
@@ -30,7 +32,10 @@ description : {
 
 },{
     timestamps:true,
+    collection: "expenses",
 })
 
-const expenseModel=mongoose.models.expense || mongoose.model("expense",expenseSchema);
+expenseSchema.index({ userId: 1, date: -1 });
+
+const expenseModel=mongoose.models.Expense || mongoose.model("Expense",expenseSchema);
 export default expenseModel;

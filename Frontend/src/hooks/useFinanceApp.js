@@ -6,7 +6,11 @@ import {
   saveStoredSession,
   withToken,
 } from "../utils/api";
-import { createEmptyOverview, sortByNewest } from "../utils/financeUtils";
+import {
+  createEmptyOverview,
+  getSpendingWarning,
+  sortByNewest,
+} from "../utils/financeUtils";
 
 const defaultDashboard = {
   monthlyIncome: 0,
@@ -24,16 +28,34 @@ const defaultFeedback = {
   message: "",
 };
 
-const getSpendingRatio = (dashboardData) => {
-  const income = Number(dashboardData?.monthlyIncome || 0);
-  const expense = Number(dashboardData?.monthlyExpense || 0);
-
-  if (income <= 0) {
-    return 0;
-  }
-
-  return expense / income;
+const defaultSpendingAlert = {
+  open: false,
+  level: "SAFE",
+  percentage: 0,
+  monthlyIncome: 0,
+  monthlyExpense: 0,
+  remaining: 0,
+  breakdown: [],
 };
+
+const SESSION_RESTORE_TIMEOUT_MS = 10000;
+
+const runWithTimeout = (promise, timeoutMs, message) =>
+  new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
 
 export const useFinanceApp = () => {
   const [token, setToken] = useState("");
@@ -52,6 +74,7 @@ export const useFinanceApp = () => {
     overview: createEmptyOverview("expense"),
   });
   const [feedback, setFeedback] = useState(defaultFeedback);
+  const [spendingAlert, setSpendingAlert] = useState(defaultSpendingAlert);
 
   const clearSession = () => {
     clearStoredSession();
@@ -68,6 +91,7 @@ export const useFinanceApp = () => {
       list: [],
       overview: createEmptyOverview("expense"),
     });
+    setSpendingAlert(defaultSpendingAlert);
   };
 
   const fetchCurrentUser = async (activeToken) => {
@@ -179,8 +203,13 @@ export const useFinanceApp = () => {
     setFeedback(defaultFeedback);
   };
 
+  const hideSpendingAlert = () => {
+    setSpendingAlert(defaultSpendingAlert);
+  };
+
   const completeAuth = async (nextToken, remember = true) => {
     const nextUser = await fetchCurrentUser(nextToken);
+    await refreshAllData(nextToken);
 
     setToken(nextToken);
     setUser(nextUser);
@@ -189,8 +218,6 @@ export const useFinanceApp = () => {
       user: nextUser,
       remember,
     });
-
-    await refreshAllData(nextToken);
   };
 
   const login = async (values) => {
@@ -297,6 +324,7 @@ export const useFinanceApp = () => {
       );
 
       await refreshAllData();
+      hideSpendingAlert();
       showFeedback(
         "income",
         "Income added",
@@ -322,6 +350,10 @@ export const useFinanceApp = () => {
     setIsWorking(true);
 
     try {
+      const previousWarning = getSpendingWarning(
+        dashboard.monthlyIncome,
+        dashboard.monthlyExpense,
+      );
       const response = await api.post(
         "/expense/add",
         values,
@@ -329,13 +361,16 @@ export const useFinanceApp = () => {
       );
 
       const refreshedData = await refreshAllData();
-      const nextSpendingRatio = getSpendingRatio(refreshedData.dashboard);
+      const nextWarning = getSpendingWarning(
+        refreshedData.dashboard.monthlyIncome,
+        refreshedData.dashboard.monthlyExpense,
+      );
 
-      if (nextSpendingRatio >= 0.7) {
+      if (previousWarning.level === "SAFE" && nextWarning.level === "MEDIUM") {
         showFeedback(
           "warning",
           "Spend carefully",
-          `You have already used ${Math.round(nextSpendingRatio * 100)}% of this month's income. Slow down a little and protect your savings.`,
+          `You have already used ${Math.round(nextWarning.percentage)}% of this month's income. Slow down a little and protect your savings.`,
         );
       } else {
         showFeedback(
@@ -343,6 +378,20 @@ export const useFinanceApp = () => {
           "Expense added",
           "Not the happiest update, but your tracker is staying honest.",
         );
+      }
+
+      if (previousWarning.level !== "CRITICAL" && nextWarning.level === "CRITICAL") {
+        setSpendingAlert({
+          open: true,
+          level: nextWarning.level,
+          percentage: nextWarning.percentage,
+          monthlyIncome: refreshedData.dashboard.monthlyIncome || 0,
+          monthlyExpense: refreshedData.dashboard.monthlyExpense || 0,
+          remaining:
+            Number(refreshedData.dashboard.monthlyIncome || 0) -
+            Number(refreshedData.dashboard.monthlyExpense || 0),
+          breakdown: refreshedData.dashboard.expenseDistribution || [],
+        });
       }
 
       return {
@@ -363,13 +412,16 @@ export const useFinanceApp = () => {
   const deleteIncome = async (id) => {
     await api.delete(`/income/delete/${id}`, withToken(token));
     await refreshAllData();
+    hideSpendingAlert();
   };
 
   const deleteExpense = async (id) => {
     await api.delete(`/expense/delete/${id}`, withToken(token));
     await refreshAllData();
+    hideSpendingAlert();
   };
 
+  // Restore persisted auth once on mount, then hydrate all finance data for that session.
   useEffect(() => {
     const restoreSession = async () => {
       const savedSession = readStoredSession();
@@ -380,7 +432,11 @@ export const useFinanceApp = () => {
       }
 
       try {
-        await completeAuth(savedSession.token, savedSession.remember);
+        await runWithTimeout(
+          completeAuth(savedSession.token, savedSession.remember),
+          SESSION_RESTORE_TIMEOUT_MS,
+          "Session restore timed out.",
+        );
       } catch (error) {
         console.error("Session restore failed:", error);
         clearSession();
@@ -390,7 +446,21 @@ export const useFinanceApp = () => {
     };
 
     restoreSession();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!isBooting) {
+      return undefined;
+    }
+
+    const watchdogId = window.setTimeout(() => {
+      console.warn("Boot watchdog triggered. Clearing saved session.");
+      clearSession();
+      setIsBooting(false);
+    }, SESSION_RESTORE_TIMEOUT_MS + 2000);
+
+    return () => window.clearTimeout(watchdogId);
+  }, [isBooting]);
 
   return {
     token,
@@ -402,6 +472,7 @@ export const useFinanceApp = () => {
     incomeState,
     expenseState,
     feedback,
+    spendingAlert,
     setIncomeRange: loadIncomes,
     setExpenseRange: loadExpenses,
     refreshAllData,
@@ -414,6 +485,7 @@ export const useFinanceApp = () => {
     deleteIncome,
     deleteExpense,
     hideFeedback,
+    hideSpendingAlert,
     allTransactions: sortByNewest([
       ...incomeState.list.map((item) => ({ ...item, type: "income" })),
       ...expenseState.list.map((item) => ({ ...item, type: "expense" })),

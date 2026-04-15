@@ -549,7 +549,7 @@ a {
 
 .app-main {
   padding: 132px 24px 24px 254px;
-  transition: padding-left 0.26s ease;
+  transition: padding-left 0.48s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .app-main-collapsed {

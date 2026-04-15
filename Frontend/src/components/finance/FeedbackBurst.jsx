@@ -1,5 +1,5 @@
 import confetti from "canvas-confetti";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 import { AlertTriangle, Sparkles, TrendingDown } from "lucide-react";
 import { useEffect } from "react";
 
@@ -62,7 +62,7 @@ const FeedbackBurst = ({ feedback, onClose }) => {
   return (
     <AnimatePresence>
       {feedback.open ? (
-        <motion.div
+        <Motion.div
           key={`${feedback.type}-${feedback.title}`}
           initial={{ opacity: 0, y: -20, scale: 0.96 }}
           animate={
@@ -80,7 +80,7 @@ const FeedbackBurst = ({ feedback, onClose }) => {
             {isIncome ? (
               <div className="pointer-events-none absolute inset-0">
                 {incomeParticles.map((particle) => (
-                  <motion.span
+                <Motion.span
                     key={particle}
                     className="absolute h-2.5 w-2.5 rounded-full bg-teal-300/80"
                     style={{
@@ -98,18 +98,18 @@ const FeedbackBurst = ({ feedback, onClose }) => {
                       delay: particle * 0.05,
                       repeat: 1,
                     }}
-                  />
+                />
                 ))}
               </div>
             ) : isWarning ? (
               <div className="pointer-events-none absolute inset-0">
-                <motion.div
+                <Motion.div
                   className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-100/70"
                   animate={{ scale: [0.9, 1.08, 0.94], opacity: [0.45, 0.85, 0.45] }}
                   transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 />
                 {warningParticles.map((particle) => (
-                  <motion.span
+                  <Motion.span
                     key={particle}
                     className="absolute h-2.5 w-2.5 rounded-full bg-amber-300/80"
                     style={{
@@ -133,7 +133,7 @@ const FeedbackBurst = ({ feedback, onClose }) => {
             ) : (
               <div className="pointer-events-none absolute inset-0">
                 {expenseParticles.map((particle) => (
-                  <motion.span
+                  <Motion.span
                     key={particle}
                     className="absolute h-2 w-10 rounded-full bg-orange-200/70"
                     style={{
@@ -172,7 +172,7 @@ const FeedbackBurst = ({ feedback, onClose }) => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
       ) : null}
     </AnimatePresence>
   );

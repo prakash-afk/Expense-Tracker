@@ -1,6 +1,15 @@
 import expenseModel from "../models/expense_model.js";
 import XLSX from "xlsx";
+import mongoose from "mongoose";
 import getDateRange from "../utils/dataFilter.js";
+
+const pickExpensePayload = (body = {}) => {
+    const { description, amount, category, date } = body;
+    return { description, amount, category, date };
+};
+
+const isValidDocumentId = (id) => mongoose.Types.ObjectId.isValid(id);
+const getRequestUserId = (req) => req.userId || req.user?.id;
 
 const getValidatedTransactionDate = (value) => {
     const transactionDate = new Date(value);
@@ -20,8 +29,8 @@ const getValidatedTransactionDate = (value) => {
 
 // add new expense
 export async function addExpense(req, res) {
-    const userId = req.user.id;
-    const { description, amount, category, date } = req.body;
+    const userId = getRequestUserId(req);
+    const { description, amount, category, date } = pickExpensePayload(req.body);
 
     if (!description || !amount || !category || !date) {
         return res.status(400).json({
@@ -65,7 +74,7 @@ export async function addExpense(req, res) {
 
 // get all expenses of logged-in user
 export async function getExpense(req, res) {
-    const userId = req.user.id;
+    const userId = getRequestUserId(req);
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
 
@@ -91,9 +100,16 @@ export async function getExpense(req, res) {
 
 // update expense
 export async function updateExpense(req, res) {
-    const userId = req.user.id;
+    const userId = getRequestUserId(req);
     const { id } = req.params;
-    const { description, amount, category, date } = req.body;
+    const { description, amount, category, date } = pickExpensePayload(req.body);
+
+    if (!isValidDocumentId(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid expense id"
+        });
+    }
 
     try {
         const expense = await expenseModel.findOne({ _id: id, userId });
@@ -105,9 +121,9 @@ export async function updateExpense(req, res) {
             });
         }
 
-        if (description) expense.description = description;
-        if (amount) expense.amount = amount;
-        if (category) expense.category = category;
+        if (description !== undefined) expense.description = description;
+        if (amount !== undefined) expense.amount = amount;
+        if (category !== undefined) expense.category = category;
         if (date) {
             const { transactionDate, error } = getValidatedTransactionDate(date);
             if (error) {
@@ -138,8 +154,15 @@ export async function updateExpense(req, res) {
 
 // delete an expense
 export async function deleteExpense(req, res) {
-    const userId = req.user.id;
+    const userId = getRequestUserId(req);
     const { id } = req.params;
+
+    if (!isValidDocumentId(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid expense id"
+        });
+    }
 
     try {
         const expense = await expenseModel.findOne({ _id: id, userId });
@@ -168,7 +191,7 @@ export async function deleteExpense(req, res) {
 
 // download expenses in Excel sheet format
 export async function downloadExpenseExcel(req, res) {
-    const userId = req.user.id;
+    const userId = getRequestUserId(req);
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
 
@@ -216,7 +239,7 @@ export async function downloadExpenseExcel(req, res) {
 
 // get overview of expenses
 export async function getExpenseOverview(req, res) {
-    const userId = req.user.id;
+    const userId = getRequestUserId(req);
     const { range } = req.query;
 
     try {

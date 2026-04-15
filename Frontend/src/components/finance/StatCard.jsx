@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getAdaptiveValueTextClass } from "../../utils/financeUtils";
 
 const toneStyles = {
   teal: "bg-teal-50 text-teal-700",
@@ -59,13 +60,19 @@ const StatCard = ({
   }, [isAnimated, numericValue]);
 
   const renderedValue = isAnimated ? formatAnimatedValue(displayValue) : value;
+  const valueClassName = getAdaptiveValueTextClass(renderedValue, {
+    defaultSize: "text-xl sm:text-2xl",
+    longSize: "text-lg sm:text-xl",
+    extraLongSize: "text-base sm:text-lg",
+    ultraLongSize: "text-sm sm:text-base",
+  });
 
   return (
     <article className="rounded-[28px] border border-slate-200/70 bg-white p-4 shadow-[0_20px_45px_rgba(15,23,42,0.06)] sm:p-5">
       <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500">{label}</p>
-          <h3 className="mt-2 break-words text-xl font-bold text-slate-900 sm:text-2xl">
+          <h3 className={`mt-2 break-words font-bold leading-tight text-slate-900 ${valueClassName}`}>
             {renderedValue}
           </h3>
         </div>

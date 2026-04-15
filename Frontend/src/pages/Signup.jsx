@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 import {
   ArrowLeft,
   Eye,
@@ -9,7 +9,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const cardMotion = {
   hidden: { opacity: 0, y: 24, scale: 0.98 },
@@ -21,20 +21,16 @@ const cardMotion = {
   },
 };
 
-const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
+const Signup = ({ onSignup, isWorking }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [formValues, setFormValues] = useState({
-    name: "Aarav Sharma",
-    email: "aarav.sharma@example.in",
-    password: "nariyal12",
+    name: "",
+    email: "",
+    password: "",
     remember: true,
   });
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
 
   const updateField = (field, value) => {
     setFormValues((current) => ({
@@ -59,7 +55,7 @@ const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
 
   return (
     <div className="auth-shell">
-      <motion.div
+      <Motion.div
         variants={cardMotion}
         initial="hidden"
         animate="visible"
@@ -89,7 +85,7 @@ const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
                 type="text"
                 value={formValues.name}
                 onChange={(event) => updateField("name", event.target.value)}
-                placeholder="Aarav Sharma"
+                placeholder="Demo User"
                 required
               />
             </div>
@@ -103,7 +99,7 @@ const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
                 type="email"
                 value={formValues.email}
                 onChange={(event) => updateField("email", event.target.value)}
-                placeholder="aarav.sharma@example.in"
+                placeholder="aryan65@example.com"
                 required
               />
             </div>
@@ -117,7 +113,7 @@ const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
                 type={showPassword ? "text" : "password"}
                 value={formValues.password}
                 onChange={(event) => updateField("password", event.target.value)}
-                placeholder="Create a strong password"
+                placeholder="demo12345"
                 minLength={8}
                 required
               />
@@ -142,7 +138,7 @@ const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
 
           <AnimatePresence mode="wait">
             {message ? (
-              <motion.p
+              <Motion.p
                 key={message}
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -150,7 +146,7 @@ const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
                 className="auth-message auth-message-error"
               >
                 {message}
-              </motion.p>
+              </Motion.p>
             ) : null}
           </AnimatePresence>
 
@@ -162,7 +158,7 @@ const Signup = ({ onSignup, isWorking, isAuthenticated }) => {
             Already have an account? <Link to="/login">Sign in</Link>
           </p>
         </form>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 };

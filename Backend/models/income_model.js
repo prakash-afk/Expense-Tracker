@@ -21,6 +21,8 @@ const incomeSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
+    immutable: true,
+    index: true,
   },
   type: {
     type: String,
@@ -30,6 +32,8 @@ const incomeSchema = new mongoose.Schema({
   timestamps: true,
   collection: "income"
 });
+
+incomeSchema.index({ userId: 1, date: -1 });
 
 const incomeModel = mongoose.models.Income || mongoose.model("Income", incomeSchema);
 export default incomeModel;

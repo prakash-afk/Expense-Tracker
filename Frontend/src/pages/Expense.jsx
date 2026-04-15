@@ -10,6 +10,7 @@ import {
   buildMonthlySeries,
   downloadTransactionsCsv,
   expenseCategories,
+  filterTransactionsByRange,
   formatCurrency,
 } from "../utils/financeUtils";
 
@@ -17,10 +18,14 @@ const Expense = ({ financeApp }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("All");
 
+  const rangedExpenseList = filterTransactionsByRange(
+    financeApp.expenseState.list,
+    financeApp.expenseState.range,
+  );
   const expenseList =
     categoryFilter === "All"
-      ? financeApp.expenseState.list
-      : financeApp.expenseState.list.filter((item) => item.category === categoryFilter);
+      ? rangedExpenseList
+      : rangedExpenseList.filter((item) => item.category === categoryFilter);
 
   const transactionItems = expenseList.map((item) => ({
     ...item,
@@ -96,7 +101,7 @@ const Expense = ({ financeApp }) => {
           <TrendChart
             title="Daily Expense Trends"
             subtitle="A day-by-day look at your current month expenses."
-            points={buildMonthlySeries(financeApp.expenseState.list, "expense")}
+            points={buildMonthlySeries(rangedExpenseList, "expense")}
             accent="#f97316"
             emptyLabel="Add expenses to see your monthly trend line."
           />

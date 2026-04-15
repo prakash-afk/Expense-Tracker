@@ -1,4 +1,3 @@
-import { LoaderCircle } from "lucide-react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/layout";
 import { useFinanceApp } from "./hooks/useFinanceApp";
@@ -8,16 +7,6 @@ import Income from "./pages/Income";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Signup from "./pages/Signup";
-
-const BootScreen = () => (
-  <div className="boot-screen">
-    <LoaderCircle className="animate-spin text-teal-600" size={42} />
-    <div>
-      <h1>Preparing your finance workspace</h1>
-      <p>Loading your saved session and latest summary.</p>
-    </div>
-  </div>
-);
 
 const ProtectedRoute = ({ isAllowed, children }) => {
   if (!isAllowed) {
@@ -30,10 +19,6 @@ const ProtectedRoute = ({ isAllowed, children }) => {
 const App = () => {
   const financeApp = useFinanceApp();
 
-  if (financeApp.isBooting) {
-    return <BootScreen />;
-  }
-
   return (
     <Routes>
       <Route
@@ -42,7 +27,6 @@ const App = () => {
           <Login
             onLogin={financeApp.login}
             isWorking={financeApp.isWorking}
-            isAuthenticated={financeApp.isAuthenticated}
           />
         }
       />
@@ -52,7 +36,6 @@ const App = () => {
           <Signup
             onSignup={financeApp.signup}
             isWorking={financeApp.isWorking}
-            isAuthenticated={financeApp.isAuthenticated}
           />
         }
       />

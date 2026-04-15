@@ -14,7 +14,13 @@ export const authMiddleware=async (req,res,next)=>{
         if(!user){
             return res.status(401).json({success:false,message:"Unauthorized: User not found"});
         }   
-        req.user=decoded;
+        req.user = {
+            id: user._id.toString(),
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+        };
+        req.userId = user._id.toString();
         next();
     }catch(error){
         return res.status(401).json({success:false,message:"Unauthorized: Invalid token"});

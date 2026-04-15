@@ -1,6 +1,15 @@
 import incomeModel from "../models/income_model.js";
 import XLSX from "xlsx";
+import mongoose from "mongoose";
 import getDateRange from "../utils/dataFilter.js";
+
+const pickIncomePayload = (body = {}) => {
+    const { description, amount, category, date } = body;
+    return { description, amount, category, date };
+};
+
+const isValidDocumentId = (id) => mongoose.Types.ObjectId.isValid(id);
+const getRequestUserId = (req) => req.userId || req.user?.id;
 
 const getValidatedTransactionDate = (value) => {
     const transactionDate = new Date(value);
@@ -20,8 +29,8 @@ const getValidatedTransactionDate = (value) => {
 
 //add new income
 export async function addIncome(req,res){
-    const userId=req.user.id;
-    const {description,amount,category,date}=req.body;
+    const userId = getRequestUserId(req);
+    const { description, amount, category, date } = pickIncomePayload(req.body);
     if(!description || !amount || !category || !date){
         return res.status(400).json({success:false,message:"Please provide all required fields"});
     }
@@ -47,7 +56,7 @@ export async function addIncome(req,res){
 
 //to get all income of logined user
 export async function getIncomes(req,res){
-    const userId=req.user.id;
+    const userId = getRequestUserId(req);
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
     try{
@@ -64,17 +73,23 @@ export async function getIncomes(req,res){
 
 //update income
 export async function updateIncome(req,res){
-    const userID=req.user.id;
-    const {id}=req.params;
-    const {description,amount,category,date}=req.body;
+    const userId = getRequestUserId(req);
+    const { id } = req.params;
+    const { description, amount, category, date } = pickIncomePayload(req.body);
+
+    if (!isValidDocumentId(id)) {
+        return res.status(400).json({success:false,message:"Invalid income id"});
+    }
+
     try{
-        const income=await incomeModel.findOne({_id:id,userId:userID});
+        const income = await incomeModel.findOne({ _id:id, userId });
         if(!income){
             return res.status(404).json({success:false,message:"Income not found"});
         }
-        income.description=description;
-        income.amount=amount;
-        income.category=category;
+
+        if (description !== undefined) income.description = description;
+        if (amount !== undefined) income.amount = amount;
+        if (category !== undefined) income.category = category;
         if (date) {
             const { transactionDate, error } = getValidatedTransactionDate(date);
             if (error) {
@@ -93,10 +108,15 @@ export async function updateIncome(req,res){
 
 // to delete an income
 export async function deleteIncome(req,res){
-    const userID=req.user.id;
-    const {id}=req.params;
+    const userId = getRequestUserId(req);
+    const { id } = req.params;
+
+    if (!isValidDocumentId(id)) {
+        return res.status(400).json({success:false,message:"Invalid income id"});
+    }
+
     try{
-        const income=await incomeModel.findOne({_id:id,userId:userID});
+        const income = await incomeModel.findOne({ _id:id, userId });
         if(!income){
             return res.status(404).json({success:false,message:"Income not found"});
         }
@@ -110,12 +130,12 @@ export async function deleteIncome(req,res){
 
 // to download data in an excel sheet
 export async function downloadIncomeExcel(req,res){
-    const userID=req.user.id;
+    const userId = getRequestUserId(req);
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
     try{
         const incomes=await incomeModel.find({
-            userId:userID,
+            userId,
             date: { $lte: endOfToday }
         }).sort({date:-1});
         const data=incomes.map(income=>({
@@ -140,11 +160,11 @@ export async function downloadIncomeExcel(req,res){
 
 //to get income overview 
 export async function getIncomeOverview(req,res){
-    const userID=req.user.id;
+    const userId = getRequestUserId(req);
     const {range}=req.query;    
     try{
         const {start,end}=getDateRange(range);
-        const incomes=await incomeModel.find({userId:userID,date:{$gte:start,$lte:end}}).sort({date:-1});
+        const incomes = await incomeModel.find({ userId, date:{$gte:start,$lte:end} }).sort({date:-1});
 
         const totalIncome = incomes.reduce((acc, cur) => acc + cur.amount, 0);
         const averageIncome = incomes.length > 0 ? totalIncome / incomes.length : 0;

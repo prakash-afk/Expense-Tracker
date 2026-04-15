@@ -9,6 +9,7 @@ import TrendChart from "../components/finance/TrendChart";
 import {
   buildMonthlySeries,
   downloadTransactionsCsv,
+  filterTransactionsByRange,
   formatCurrency,
   incomeCategories,
 } from "../utils/financeUtils";
@@ -17,10 +18,14 @@ const Income = ({ financeApp }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("All");
 
+  const rangedIncomeList = filterTransactionsByRange(
+    financeApp.incomeState.list,
+    financeApp.incomeState.range,
+  );
   const incomeList =
     categoryFilter === "All"
-      ? financeApp.incomeState.list
-      : financeApp.incomeState.list.filter((item) => item.category === categoryFilter);
+      ? rangedIncomeList
+      : rangedIncomeList.filter((item) => item.category === categoryFilter);
 
   const transactionItems = incomeList.map((item) => ({
     ...item,
@@ -95,7 +100,7 @@ const Income = ({ financeApp }) => {
           <TrendChart
             title="Daily Income Trends"
             subtitle="A day-by-day look at your current month income."
-            points={buildMonthlySeries(financeApp.incomeState.list, "income")}
+            points={buildMonthlySeries(rangedIncomeList, "income")}
             accent="#14b8a6"
             emptyLabel="Add income to see your monthly trend line."
           />

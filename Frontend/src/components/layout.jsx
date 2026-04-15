@@ -1,9 +1,10 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion as Motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import FeedbackBurst from "./finance/FeedbackBurst";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
+import SupportModal from "./support/SupportModal";
 
 const pageMotion = {
   initial: { opacity: 0, y: 16 },
@@ -23,10 +24,7 @@ const Layout = ({ financeApp }) => {
   const location = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location.pathname]);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
 
   return (
     <div className="app-shell">
@@ -41,13 +39,14 @@ const Layout = ({ financeApp }) => {
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed((current) => !current)}
         onLogout={financeApp.logout}
+        onOpenSupport={() => setIsSupportOpen(true)}
         isMobileMenuOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
 
       <main className={`app-main ${isSidebarCollapsed ? "app-main-collapsed" : ""}`}>
         <AnimatePresence mode="wait">
-          <motion.div
+          <Motion.div
             key={location.pathname}
             variants={pageMotion}
             initial="initial"
@@ -56,13 +55,19 @@ const Layout = ({ financeApp }) => {
             className="page-frame"
           >
             <Outlet />
-          </motion.div>
+          </Motion.div>
         </AnimatePresence>
       </main>
 
       <FeedbackBurst
         feedback={financeApp.feedback}
         onClose={financeApp.hideFeedback}
+      />
+
+      <SupportModal
+        isOpen={isSupportOpen}
+        onClose={() => setIsSupportOpen(false)}
+        user={financeApp.user}
       />
     </div>
   );

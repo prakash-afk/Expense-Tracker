@@ -2,7 +2,7 @@ import incomeModel from "../models/income_model.js";
 import expenseModel from "../models/expense_model.js";
 
 export async function getDashboardOverview(req,res){
-    const userId=req.user.id;
+    const userId = req.userId || req.user?.id;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfToday = new Date(now);

@@ -1,3 +1,5 @@
+import { getAdaptiveValueTextClass } from "../../utils/financeUtils";
+
 const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
   const angleInRadians = ((angleInDegrees - 180) * Math.PI) / 180;
 
@@ -17,6 +19,13 @@ const createArcPath = (value, radius = 72) => {
 };
 
 const GaugeCard = ({ title, amount, percent, color, footer }) => {
+  const amountClassName = getAdaptiveValueTextClass(amount, {
+    defaultSize: "text-[2rem]",
+    longSize: "text-[1.7rem]",
+    extraLongSize: "text-[1.45rem]",
+    ultraLongSize: "text-xl",
+  });
+
   return (
     <article className="rounded-[28px] border border-slate-200/70 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
       <div className="text-center">
@@ -41,7 +50,9 @@ const GaugeCard = ({ title, amount, percent, color, footer }) => {
           />
         </svg>
 
-        <p className="text-[2rem] font-bold text-slate-900">{amount}</p>
+        <p className={`mx-auto max-w-full break-words font-bold leading-tight text-slate-900 ${amountClassName}`}>
+          {amount}
+        </p>
         <p className="mt-2 text-sm text-slate-500">{footer}</p>
       </div>
     </article>

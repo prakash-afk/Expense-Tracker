@@ -1,6 +1,9 @@
 import { ReceiptIndianRupee } from "lucide-react";
 import TransactionFeed from "./TransactionFeed";
-import { formatCurrency } from "../../utils/financeUtils";
+import {
+  formatCurrency,
+  getAdaptiveValueTextClass,
+} from "../../utils/financeUtils";
 
 const InsightRail = ({ recentTransactions, expenseDistribution }) => {
   return (
@@ -22,13 +25,22 @@ const InsightRail = ({ recentTransactions, expenseDistribution }) => {
           {expenseDistribution.slice(0, 5).map((item) => (
             <div
               key={item.category}
-              className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3"
+              className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 px-4 py-3"
             >
-              <div>
-                <p className="font-semibold text-slate-900">{item.category}</p>
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-slate-900">{item.category}</p>
                 <p className="text-sm text-slate-500">{item.percent}% of spending</p>
               </div>
-              <p className="font-bold text-slate-900">{formatCurrency(item.amount)}</p>
+              <p
+                className={`max-w-[42%] break-words text-right font-bold leading-tight text-slate-900 ${getAdaptiveValueTextClass(formatCurrency(item.amount), {
+                  defaultSize: "text-base sm:text-lg",
+                  longSize: "text-sm sm:text-base",
+                  extraLongSize: "text-sm",
+                  ultraLongSize: "text-xs sm:text-sm",
+                })}`}
+              >
+                {formatCurrency(item.amount)}
+              </p>
             </div>
           ))}
 
