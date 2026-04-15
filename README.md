@@ -267,23 +267,7 @@ From `Backend/package.json`:
 - Ensured all income and expense records are tied to authenticated `userId` on the backend
 - Prevented client-side `userId` spoofing by ignoring frontend `userId` inputs
 - Scoped all CRUD operations to user context to eliminate cross-user data access
-- Enforced ownership checks on update and delete operations, returning `404` for unauthorized access
-
-## Data Notes
-
-- transaction records are stored per authenticated user
-- future transaction dates are blocked in the form and rejected by the API
-- monthly dashboard summaries are calculated from the current calendar month
-- recent transactions are sorted by transaction date
-- income and expense pages support filtered overview ranges
-
-## Export Support
-
-The app currently supports:
-
-- CSV export from the frontend transaction pages
-- Excel export from backend download endpoints
-
+- Enforced ownership checks on update and delete operations, returning `404` for unauthorized acces
 
 
 ## Deployment Notes
